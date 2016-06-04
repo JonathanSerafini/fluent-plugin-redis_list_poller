@@ -5,7 +5,7 @@ This gem provides a few input plugins for Fluentd which are designed to more eff
 * *redis_list_poller*: Input plugin designed to fetch large volumes of messages
 * *redis_list_monitor*: Input plugin designed to fetch queue size metrics
 
-In additional to the standard stuff, the `redis_list_poller` input plugin also looks for a lock key in Redis to see whether it has been administratively disabled. This lock key users the naming convention of `redis:KEY_NAME:lock`.
+In additional to the standard stuff, the `redis_list_poller` input plugin also looks for a lock key in Redis to see whether it has been administratively disabled. This lock key follows the naming convention of `redis:KEY_NAME:lock`.
 
 ## Requirements
 
