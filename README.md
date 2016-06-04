@@ -14,7 +14,7 @@ In additional to the standard stuff, the `redis_list_poller` input plugin also l
 ## Installation
 
 ```bash
-gem install fluent-plugin-redis_list_input
+gem install fluent-plugin-redis_list_poller
 ```
 
 ## Configuration Options
