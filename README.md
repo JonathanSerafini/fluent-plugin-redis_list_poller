@@ -56,13 +56,13 @@ poll_interval|batch_size|messages/second|
 0.2   | 1   | 5
 0.01  | 1   | 100
 0.001 | 1   | 457
--------------|----------|---------------|
+poll_interval|batch_size|messages/second|
 1     | 10  | 10
 0.5   | 10  | 20
 0.2   | 10  | 50
 0.01  | 10  | 1000 
 0.001 | 10  | 1793
--------------|----------|---------------|
+poll_interval|batch_size|messages/second|
 1     | 100 | 100
 0.5   | 100 | 200
 0.2   | 100 | 500
