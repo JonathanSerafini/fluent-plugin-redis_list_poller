@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-redis_list_poller"
-  spec.version       = "0.1.0"
+  spec.version       = "1.0.0"
   spec.authors       = ["Jonathan Serafini"]
   spec.email         = ["jonathan@serafini.ca"]
 
@@ -18,5 +18,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
 
-  spec.add_runtime_dependency "fluentd", [">= 0.12.0", "< 2"]
+  spec.add_runtime_dependency "fluentd", [">= 0.14.0", "< 2"]
 end

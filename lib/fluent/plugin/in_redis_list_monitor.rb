@@ -7,9 +7,10 @@ module Fluent
     # output metrics to the login pipeline.
     # @since 0.1.0
     class RedisListMonitorInput < Input
-      include Fluent::PluginMixin::Redis
-
       Plugin.register_input('redis_list_monitor', self)
+      
+      include Fluent::PluginMixin::Redis
+      helpers :timer
 
       # input plugin parameters
       config_param :tag,      :string,  :default => nil
@@ -19,7 +20,6 @@ module Fluent
       # @return [NilClass]
       def initialize
         super
-        require 'cool.io'
       end
 
       # Initialize attributes and parameters
@@ -63,44 +63,22 @@ module Fluent
       def start
         super
 
-        @loop = Coolio::Loop.new
-
         start_redis
         start_poller
-
-        @thread = Thread.new(&method(:run))
       end
 
       def start_poller
-        @poller = TimerWatcher.new(
-          @poll_interval,
-          log,
-          &method(:action_poll)
-        )
-
-        @loop.attach(@poller)
-      end
-
-      # Begin the logging pipeline
-      # @since 0.1.0
-      # @return [NilClass]
-      def run
-        @loop.run
-      rescue => e
-        log.error "unexpected error", :error => e
-        log.error_backtrace
+        timer_execute(:poll, @poll_interval) do
+          action_poll
+        end
       end
 
       # Tear down the plugin
       # @since 0.1.0
       # @return [NilClass]
       def shutdown
-        @loop.watchers.each { |w| w.detach }
-        @loop.stop
-        Thread.kill(@thread)
-        @thread.join
-        shutdown_redis
         super
+        shutdown_redis
       end
 
       # Wether the poller has been temporarily disabled or should fetch messages
@@ -149,25 +127,6 @@ module Fluent
         log.error "error monitoring queue", :error => e
         log.error_backtrace
         sleep!(@retry_interval)
-      end
-
-      # Generic Cool.io timer which will execute a given callback on schedule.
-      # @since 0.1.0
-      class TimerWatcher < Coolio::TimerWatcher
-        attr_reader :log
-
-        def initialize(interval, log, &callback)
-          @callback = callback
-          @log = log
-          super(interval, true)
-        end
-
-        def on_timer
-          @callback.call
-        rescue => e
-          log.error "unexpected error", :error=>e
-          log.error_backtrace
-        end
       end
     end
   end

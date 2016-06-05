@@ -1,4 +1,6 @@
 require "fluent/plugin/input"
+require "fluent/plugin/parser"
+require 'fluent/process'
 require "fluent/plugin_mixin/redis"
 
 module Fluent
@@ -7,8 +9,8 @@ module Fluent
       include Fluent::PluginMixin::Redis
 
       Plugin.register_input('redis_list_poller', self)
-
       helpers :storage
+      helpers :timer
 
       # redis list details
       # - command: redis command to execute when fetching messages
@@ -18,14 +20,17 @@ module Fluent
 
       # input plugin parameters
       config_param :tag,      :string,  :default => nil
-      config_param :format,   :string,  :default => "json"
+
+      # parser plugin parameters
+      config_section :parse, :init => true, :multi => false do
+        config_set_default :@type, "json"
+      end
 
       # Initialize new input plugin
       # @since 0.1.0
       # @return [NilClass]
       def initialize
         super
-        require 'cool.io'
         require 'msgpack'
       end
 
@@ -46,7 +51,7 @@ module Fluent
       # @since 0.1.0
       # @return [NilClass]
       def configure_params(config)
-        %w(host port key command format tag).each do |key|
+        %w(host port key command tag).each do |key|
           next if instance_variable_get("@#{key}")
           raise Fluent::ConfigError, "configuration key missing: #{key}"
         end
@@ -60,8 +65,10 @@ module Fluent
       # @since 0.1.0
       # @return [NilClass]
       def configure_parser(config)
-        @parser = Plugin.new_parser(@format)
-        @parser.configure(config)
+        parser_config = @parse.corresponding_config_element
+        parser_type = parser_config['@type']
+        @parser = Fluent::Plugin.new_parser(parser_type, :parent => self)
+        @parser.configure(parser_config)
       end
 
       # Configure locking
@@ -81,11 +88,9 @@ module Fluent
       # @return [NilClass]
       def start
         super
-
-        @loop = Coolio::Loop.new
         start_redis
         start_poller
-        @thread = Thread.new(&method(:run))
+        start_monitor
       end
 
       # Prepare the Redis queue poller
@@ -96,42 +101,30 @@ module Fluent
       # @since 0.1.0
       # @return [NilClass]
       def start_poller
-        @poller = TimerWatcher.new(
-          @poll_interval,
-          log,
-          &method(:action_poll)
-        )
-
-        @lock_monitor = TimerWatcher.new(
-          1,
-          log,
-          &method(:action_locking_monitor)
-        )
-
-        @loop.attach(@poller)
-        @loop.attach(@lock_monitor)
+        timer_execute(:poller, @poll_interval) do
+          action_poll
+        end
       end
 
-      # Begin the logging pipeline
-      # @since 0.1.0
+      # Prepare the Redis queue monitor
+      #
+      # This timed event will routinely poll for a lock key and disable the
+      # queue poller if required
+      #
+      # @since 0.1.1
       # @return [NilClass]
-      def run
-        @loop.run
-      rescue => e
-        log.error "unexpected error", :error => e
-        log.error_backtrace
+      def start_monitor
+        timer_execute(:monitor, 1) do
+          action_locking_monitor
+        end
       end
 
       # Tear down the plugin
       # @since 0.1.0
       # @return [NilClass]
       def shutdown
-        @loop.watchers.each { |w| w.detach }
-        @loop.stop
-        Thread.kill(@thread)
-        @thread.join
-        shutdown_redis
         super
+        shutdown_redis
       end
 
       # Whether to fetch a single item or a multiple items in batch
@@ -238,25 +231,6 @@ module Fluent
         log.error "error fetching record", :error => e
         log.error_backtrace
         sleep!(@retry_interval)
-      end
-
-      # Generic Cool.io timer which will execute a given callback on schedule.
-      # @since 0.1.0
-      class TimerWatcher < Coolio::TimerWatcher
-        attr_reader :log
-
-        def initialize(interval, log, &callback)
-          @callback = callback
-          @log = log
-          super(interval, true)
-        end
-
-        def on_timer
-          @callback.call
-        rescue => e
-          log.error "unexpected error", :error => e
-          log.error_backtrace
-        end
       end
     end
   end
