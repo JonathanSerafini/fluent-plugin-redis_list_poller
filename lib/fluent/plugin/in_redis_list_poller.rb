@@ -6,12 +6,11 @@ require "fluent/plugin_mixin/redis"
 module Fluent
   module Plugin
     class RedisListPollerInput < Input
-      Plugin.register_input('redis_list_poller', self)
-
       include Fluent::PluginMixin::Redis
-      include DetachMultiProcessMixin
 
+      Plugin.register_input('redis_list_poller', self)
       helpers :storage
+      helpers :timer
 
       # redis list details
       # - command: redis command to execute when fetching messages

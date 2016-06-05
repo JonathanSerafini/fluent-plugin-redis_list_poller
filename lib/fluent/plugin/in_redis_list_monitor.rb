@@ -7,9 +7,10 @@ module Fluent
     # output metrics to the login pipeline.
     # @since 0.1.0
     class RedisListMonitorInput < Input
-      include Fluent::PluginMixin::Redis
-
       Plugin.register_input('redis_list_monitor', self)
+      
+      include Fluent::PluginMixin::Redis
+      helpers :timer
 
       # input plugin parameters
       config_param :tag,      :string,  :default => nil
