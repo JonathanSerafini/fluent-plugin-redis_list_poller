@@ -21,7 +21,11 @@ module Fluent
 
       # input plugin parameters
       config_param :tag,      :string,  :default => nil
-      config_param :format,   :string,  :default => "json"
+
+      # parser plugin parameters
+      config_section :parse, :init => true, :multi => false do
+        config_set_default :@type, "json"
+      end
 
       # Initialize new input plugin
       # @since 0.1.0
@@ -48,7 +52,7 @@ module Fluent
       # @since 0.1.0
       # @return [NilClass]
       def configure_params(config)
-        %w(host port key command format tag).each do |key|
+        %w(host port key command tag).each do |key|
           next if instance_variable_get("@#{key}")
           raise Fluent::ConfigError, "configuration key missing: #{key}"
         end
@@ -62,8 +66,10 @@ module Fluent
       # @since 0.1.0
       # @return [NilClass]
       def configure_parser(config)
-        @parser = Plugin.new_parser(@format, parent: self)
-        @parser.configure(config)
+        parser_config = @parse.corresponding_config_element
+        parser_type = parser_config['@type']
+        @parser = Fluent::Plugin.new_parser(parser_type, :parent => self)
+        @parser.configure(parser_config)
       end
 
       # Configure locking
