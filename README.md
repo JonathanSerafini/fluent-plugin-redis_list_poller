@@ -35,11 +35,14 @@ gem install fluent-plugin-redis_list_poller
   batch_size  100
 
   tag         redis.data
-  format      json
 
   poll_inteval      0.01
   sleep_inteval     5
   retry_interval    5
+
+  <parse>
+    @type json
+  </parse>
 </source>
 ```
 
