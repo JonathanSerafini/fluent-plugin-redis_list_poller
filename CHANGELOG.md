@@ -1,5 +1,9 @@
 # Changelog
 
+v1.0.1
+--------------
+* Add missing gem dependecies
+
 v1.0.0
 ---------------
 * Migrate poller parser configuration to Fluent 0.14's new dsl
