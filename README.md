@@ -36,8 +36,8 @@ gem install fluent-plugin-redis_list_poller
 
   tag         redis.data
 
-  poll_inteval      0.01
-  sleep_inteval     5
+  poll_interval      0.01
+  sleep_interval     5
   retry_interval    5
 
   <parse>
