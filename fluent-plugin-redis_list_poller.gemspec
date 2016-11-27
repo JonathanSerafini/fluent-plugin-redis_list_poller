@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = 'fluent-plugin-redis_list_poller'
-  spec.version       = '1.0.1'
+  spec.version       = '1.1.0'
   spec.authors       = ['Jonathan Serafini']
   spec.email         = ['jonathan@serafini.ca']
 
