@@ -49,6 +49,7 @@ module Fluent
           :port => @port,
           :driver => @driver,
           :password => @password,
+          :db => @db,
           :thread_safe => true
         )
       end
