@@ -1,3 +1,7 @@
+# Abandoned Project
+
+**NOTE**: This project is no longer being maintained.
+
 # Fluent::Plugin::RedisListPoller
 
 This gem provides a few input plugins for Fluentd which are designed to more efficiently poll large volumes of messages than other existing redis input plugins. 
